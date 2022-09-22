@@ -1,0 +1,62 @@
+# upstream updates
+#updates-3.6.diff
+#updates-3.7.diff
+
+# 3.6
+3.6/distutils-install-layout.diff
+3.6/distutils-link.diff
+3.6/distutils-sysconfig.diff
+3.6/bdist-wininst-notfound.diff
+3.6/multiarch.diff
+3.6/ext-no-libpython-link.diff
+3.6/multiarch-extname.diff
+3.6/disable-some-tests.diff
+3.6/mangle-fstack-protector.diff
+3.6/lib2to3-no-pickled-grammar.diff
+# 3.7
+3.7/distutils-install-layout.diff
+3.7/distutils-link.diff
+3.7/distutils-sysconfig.diff
+3.7/bdist-wininst-notfound.diff
+3.7/multiarch.diff
+3.7/ext-no-libpython-link.diff
+3.7/multiarch-extname.diff
+3.7/disable-some-tests.diff
+3.7/mangle-fstack-protector.diff
+3.7/lib2to3-no-pickled-grammar.diff
+# 3.8
+3.8/distutils-install-layout.diff
+3.8/distutils-link.diff
+3.8/distutils-sysconfig.diff
+3.8/bdist-wininst-notfound.diff
+3.8/multiarch.diff
+3.8/ext-no-libpython-link.diff
+3.8/multiarch-extname.diff
+3.8/disable-some-tests.diff
+3.8/mangle-fstack-protector.diff
+3.8/lib2to3-no-pickled-grammar.diff
+3.8/sysconfigdata-name.diff
+# 3.9
+3.9/distutils-install-layout.diff
+3.9/distutils-link.diff
+3.9/distutils-sysconfig.diff
+3.9/bdist-wininst-notfound.diff
+3.9/multiarch.diff
+3.9/ext-no-libpython-link.diff
+3.9/multiarch-extname.diff
+3.9/disable-some-tests.diff
+3.9/mangle-fstack-protector.diff
+3.9/lib2to3-no-pickled-grammar.diff
+3.9/sysconfigdata-name.diff
+# 3.10
+3.10/distutils-install-layout.diff
+3.10/distutils-link.diff
+3.10/distutils-sysconfig.diff
+3.10/multiarch.diff
+3.10/ext-no-libpython-link.diff
+3.10/multiarch-extname.diff
+3.10/disable-some-tests.diff
+3.10/mangle-fstack-protector.diff
+3.10/lib2to3-no-pickled-grammar.diff
+add-dbm-module.diff
+no-dbm.diff

@@ -1,0 +1,25 @@
+# Edit this file for local setup changes
+array arraymodule.c	# array objects
+math mathmodule.c # -lm # math library functions, e.g. sin()
+_struct _struct.c	# binary structure packing/unpacking
+time timemodule.c # -lm # time operations and variables
+operator operator.c	# operator.add() and similar goodies
+_random _randommodule.c	# Random number generator
+_collections _collectionsmodule.c # Container types
+itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
+_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H _elementtree.c	# elementtree accelerator
+_pickle _pickle.c	# pickle accelerator
+datetime datetimemodule.c	# date/time type
+_bisect _bisectmodule.c	# Bisection algorithms
+_heapq _heapqmodule.c	# Heap queue algorithm
+unicodedata unicodedata.c    # static Unicode character database
+fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
+spwd spwdmodule.c		# spwd(3) 
+grp grpmodule.c		# grp(3)
+select selectmodule.c	# select(2); not on ancient System V
+_socket socketmodule.c
+syslog syslogmodule.c		# syslog daemon interface
+binascii binascii.c
+_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c _ctypes/malloc_closure.c  -lffi 
+zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+pyexpat expat/xmlparse.c expat/xmlrole.c expat/xmltok.c pyexpat.c -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H
