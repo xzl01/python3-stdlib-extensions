@@ -58,5 +58,15 @@
 3.10/disable-some-tests.diff
 3.10/mangle-fstack-protector.diff
 3.10/lib2to3-no-pickled-grammar.diff
+# 3.11
+3.11/distutils-install-layout.diff
+3.11/distutils-link.diff
+3.11/distutils-sysconfig.diff
+3.11/multiarch.diff
+3.11/ext-no-libpython-link.diff
+3.11/multiarch-extname.diff
+3.11/disable-some-tests.diff
+3.11/mangle-fstack-protector.diff
+3.11/lib2to3-no-pickled-grammar.diff
 add-dbm-module.diff
 no-dbm.diff

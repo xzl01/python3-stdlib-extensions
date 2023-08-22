@@ -16,10 +16,10 @@ distrelease  := $(shell lsb_release -cs)
 #rel_ext	= $(strip $(shell dpkg-parsechangelog | awk -F- '/^Version:/ {print $$NF}'))
 
 PYVERS	= $(shell py3versions -vs)
-PYVERS	= 3.9 3.10
+PYVERS	= 3.10 3.11
 
-MIN_VER = 3.9.4-0~
-NEXT_VER = 3.11
+MIN_VER = 3.10.5-1~
+NEXT_VER = 3.12
 
 # FIXME: remove sid when uploading to unstable, after bullseye is released
 #ifeq (,$(filter $(distrelase), jessie stretch buster bullseye bookworm sid precise trusty xenial bionic focal groovy hirsute))
@@ -96,8 +96,18 @@ install-prereq:
 	dh_prep
 
 install-stamp-py%: build-stamp-py%
-	cd $* && $(SET_ENV) python$* setup.py install \
-		--root=$(CURDIR)/$(d_tk) --install-layout=deb
+	: # FIXME: 3.11 install errors out ...
+	if [ "$*" = 3.11 ]; then \
+	  cd $* && $(SET_ENV) python$* setup.py install \
+		--root=$(CURDIR)/$(d_tk) --install-layout=deb; \
+	  mkdir -p $(d_tk)/usr/lib/python$*/lib-dynload; \
+	  mv $(d_tk)/usr/lib/python3/dist-packages/*.so \
+	    $(d_tk)/usr/lib/python$*/lib-dynload; \
+	  rm -rf $(d_tk)/usr/lib/python3/dist-packages; \
+	else \
+	  cd $* && $(SET_ENV) python$* setup.py install \
+		--root=$(CURDIR)/$(d_tk) --install-layout=deb; \
+	fi
 	mkdir -p $(d_tk)/usr/lib/python$*/lib-dynload
 	mv $(d_tk)/usr/lib/python3/*-packages/*.so \
 		$(d_tk)/usr/lib/python$*/lib-dynload/
@@ -127,8 +137,18 @@ endif
 	find $(d_2to3) -name __pycache__ | xargs -r rm -rf
 
 dbg-install-py%: dbg-stamp-py%
-	cd $* && $(SET_ENV) python$*-dbg setup.py install \
-		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb
+	: # FIXME: 3.11 install errors out ...
+	if [ "$*" = 3.11 ]; then \
+	  cd $* && $(SET_ENV) python$*-dbg setup.py install \
+		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb; \
+	  mkdir -p $(d_tk)/usr/lib/python$*/lib-dynload; \
+	  mv $(d_tk)/usr/lib/python3/dist-packages/*.so \
+	    $(d_tk)/usr/lib/python$*/lib-dynload; \
+	  rm -rf $(d_tk)/usr/lib/python3/dist-packages; \
+	else \
+	  cd $* && $(SET_ENV) python$*-dbg setup.py install \
+		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb; \
+	fi
 	mkdir -p $(d_tk)-dbg/usr/lib/python$*/lib-dynload
 	mv $(d_tk)-dbg/usr/lib/python3/*-packages/*.so \
 		$(d_tk)-dbg/usr/lib/python$*/lib-dynload/

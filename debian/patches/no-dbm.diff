@@ -9,3 +9,14 @@
              dbm_order = "gdbm:ndbm:bdb".split(":")
              dbmext = None
              for cand in dbm_order:
+--- a/3.11/setup.py
++++ b/3.11/setup.py
+@@ -549,7 +549,7 @@ class PyBuildExt(build_ext):
+         # XXX Omitted modules: gl, pure, dl, SGI-specific modules
+ 
+         # The standard Unix dbm module:
+-        if True:
++        if False:
+             dbm_order = "gdbm:ndbm:bdb".split(":")
+             dbmext = None
+             for cand in dbm_order:

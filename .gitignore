@@ -1,1 +1,15 @@
-.pc/
+build-stamp
+*-stamp-py3.*
+
+debian/.debhelper
+debian/files
+debian/python3-*.debhelper.log
+debian/python3-*.postinst
+debian/python3-*.substvars
+
+debian/python3-distutils
+debian/python3-gdbm-dbg
+debian/python3-gdbm
+debian/python3-lib2to3
+debian/python3-tk-dbg
+debian/python3-tk
