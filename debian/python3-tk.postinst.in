@@ -29,6 +29,11 @@ case "$1" in
 	find /usr/lib/python3.8/tkinter -empty -type d -delete 2>/dev/null || true
 	find /usr/lib/python3.8 -maxdepth 0 -empty -type d -delete 2>/dev/null || true
     fi
+    if [ -n "$2" ] && dpkg --compare-versions $2 lt 3.10.8-1~; then
+	find /usr/lib/python3.9/tkinter -name __pycache__ 2>/dev/null | xargs -r rm -rf
+	find /usr/lib/python3.9/tkinter -empty -type d -delete 2>/dev/null || true
+	find /usr/lib/python3.9 -maxdepth 0 -empty -type d -delete 2>/dev/null || true
+    fi
 esac
 
 #DEBHELPER#

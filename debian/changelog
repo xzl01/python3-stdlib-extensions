@@ -1,8 +1,42 @@
-python3-stdlib-extensions (3.10.5-2deepin) unstable; urgency=medium
+python3-stdlib-extensions (3.11.2-2) unstable; urgency=high
 
-  * Remove python 3.9.
+  * Relax versioned dependencies.
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Tue, 22 Aug 2023 23:22:17 +0800
+ -- Matthias Klose <doko@debian.org>  Wed, 15 Feb 2023 12:44:24 +0100
+
+python3-stdlib-extensions (3.11.2-1) unstable; urgency=medium
+
+  * Update 3.11 extensions and modules to 3.11.2 release (Tkinter only).
+  * Update 3.10 extensions and modules to the 3.10.10 release (Tkinter only).
+  * Stop building extensions for 3.10.
+  * Bump standards version.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 15 Feb 2023 07:10:29 +0100
+
+python3-stdlib-extensions (3.10.8-1) unstable; urgency=medium
+
+  * Update 3.10 extensions and modules to the 3.10.8 release.
+  * Update 3.11 extensions and modules to 3.11.0 release.
+  * Remove bytecode files for old 3.9 version. Closes: #1017445.
+  * Bump standards version.
+
+ -- Matthias Klose <doko@debian.org>  Sun, 30 Oct 2022 09:24:07 +0100
+
+python3-stdlib-extensions (3.10.7-1) unstable; urgency=medium
+
+  * Update 3.10 extensions and modules to the 3.10.7 release.
+  * Update 3.11 extensions and modules to 3.11.0 rc2.
+  * Update 3.9 extensions and modules to the 3.9.14 release.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 12 Sep 2022 18:49:43 +0200
+
+python3-stdlib-extensions (3.10.6-1) unstable; urgency=medium
+
+  * Update 3.10 extensions and modules to the 3.10.6 release.
+  * Update 3.11 extensions and modules to 3.11.0 rc1.
+  * Remove python3.9 from build dependencies and don't build for 3.9.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 10 Aug 2022 13:25:31 +0200
 
 python3-stdlib-extensions (3.10.5-2) unstable; urgency=medium
 
