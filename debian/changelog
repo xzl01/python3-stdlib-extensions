@@ -1,3 +1,24 @@
+python3-stdlib-extensions (3.11.4-1) unstable; urgency=medium
+
+  * Update 3.11 extensions and modules to 3.11.4 release.
+  * Update 3.12 extensions and modules to 3.12.0 beta2.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 12 Jun 2023 10:31:06 +0200
+
+python3-stdlib-extensions (3.11.3-2) experimental; urgency=medium
+
+  * Remove 3.10 byte code on upgrade. Closes: #1031909.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 02 May 2023 14:15:07 +0200
+
+python3-stdlib-extensions (3.11.3-1) experimental; urgency=medium
+
+  * Update 3.11 extensions and modules to 3.11.3 release (no changes).
+  * Update 3.10 extensions and modules to the 3.10.11 release (no changes).
+  * Add extensions for python3.12 3.12.0 alpha7.
+
+ -- Matthias Klose <doko@debian.org>  Thu, 13 Apr 2023 09:36:11 +0200
+
 python3-stdlib-extensions (3.11.2-2) unstable; urgency=high
 
   * Relax versioned dependencies.

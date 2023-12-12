@@ -16,10 +16,10 @@ distrelease  := $(shell lsb_release -cs)
 #rel_ext	= $(strip $(shell dpkg-parsechangelog | awk -F- '/^Version:/ {print $$NF}'))
 
 PYVERS	= $(shell py3versions -vs)
-PYVERS	= 3.11
+PYVERS	= 3.11 3.12
 
-MIN_VER = 3.10.8-0~
-NEXT_VER = 3.12
+MIN_VER = 3.11.2-0~
+NEXT_VER = 3.13
 
 # FIXME: remove sid when uploading to unstable, after bullseye is released
 #ifeq (,$(filter $(distrelase), jessie stretch buster bullseye bookworm sid precise trusty xenial bionic focal groovy hirsute))
@@ -33,12 +33,15 @@ NEXT_VER = 3.12
 include /usr/share/dpkg/architecture.mk
 
 SET_ENV = PYTHONPATH=$(CURDIR)/$*/Lib
+SET_ENV12 = PYTHONPATH=$(CURDIR)/3.11/Lib
 
 ifneq ($(DEB_BUILD_MULTIARCH),$(DEB_HOST_MULTIARCH))
   SET_ENV += PYTHONPATH=/usr/lib/python$*/plat-$(DEB_HOST_MULTIARCH)
+  SET_ENV12 += PYTHONPATH=/usr/lib/python3.12/plat-$(DEB_HOST_MULTIARCH)
 
   # FIXME: is this sufficient?
   SET_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_GNU_CPU)
+  SET_ENV12 += _PYTHON_HOST_PLATFORM=$(DEB_HOST_GNU_CPU)
 endif
 
 p_tk	= python3-tk
@@ -70,6 +73,20 @@ dbg-stamp-py%:
 	ln -sf /usr/lib/libBLT.2.4.so.8.6 $*/libBLT85.so
 	ln -sf /usr/lib/libBLT.2.4.so.8.6 $*/libBLT85.so.8.6
 	cd $* && $(SET_ENV) python$*-dbg setup.py build
+	touch $@
+
+build-stamp-py3.12:
+	dh_testdir
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.12/libBLT86.so
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.12/libBLT86.so.8.6
+	cd 3.12 && $(SET_ENV12) python3.12 setup.py build
+	touch $@
+
+dbg-stamp-py3.12:
+	dh_testdir
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.12/libBLT85.so
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.12/libBLT85.so.8.6
+	cd 3.12 && $(SET_ENV12) python3.12-dbg setup.py build
 	touch $@
 
 clean:
@@ -159,6 +176,70 @@ ifeq ($(with_dbmmodule),yes)
 	if [ -f $(d_tk)-dbg/usr/lib/python$*/lib-dynload/_dbm*.so ]; then \
 	  mv $(d_tk)-dbg/usr/lib/python$*/lib-dynload/_dbm*.so \
 		$(d_gdbm)-dbg/usr/lib/python$*/lib-dynload/; \
+	fi
+endif
+	rm -rf $(d_tk)-dbg/usr/lib/python3
+
+install-stamp-py3.12: build-stamp-py3.12
+	: # FIXME: 3.12 install errors out ...
+	if [ "3.12" = 3.12 ]; then \
+	  cd 3.12 && $(SET_ENV12) python3.12 setup.py install \
+		--root=$(CURDIR)/$(d_tk) --install-layout=deb; \
+	  mkdir -p $(d_tk)/usr/lib/python3.12/lib-dynload; \
+	  mv $(d_tk)/usr/lib/python3/dist-packages/*.so \
+	    $(d_tk)/usr/lib/python3.12/lib-dynload; \
+	  rm -rf $(d_tk)/usr/lib/python3/dist-packages; \
+	else \
+	  cd 3.12 && $(SET_ENV12) python3.12 setup.py install \
+		--root=$(CURDIR)/$(d_tk) --install-layout=deb; \
+	fi
+	mkdir -p $(d_tk)/usr/lib/python3.12/lib-dynload
+	mv $(d_tk)/usr/lib/python3/*-packages/*.so \
+		$(d_tk)/usr/lib/python3.12/lib-dynload/
+	mkdir -p $(d_gdbm)/usr/lib/python3.12/lib-dynload
+	mv $(d_tk)/usr/lib/python3.12/lib-dynload/_gdbm*.so \
+		$(d_gdbm)/usr/lib/python3.12/lib-dynload/
+ifeq ($(with_dbmmodule),yes)
+	if [ -f $(d_tk)/usr/lib/python3.12/lib-dynload/_dbm*.so ]; then \
+	  mv $(d_tk)/usr/lib/python3.12/lib-dynload/_dbm*.so \
+		$(d_gdbm)/usr/lib/python3.12/lib-dynload/; \
+	fi
+endif
+	rm -rf $(d_tk)/usr/lib/python3
+	cp -r 3.12/Lib/tkinter $(d_tk)/usr/lib/python3.12/.
+	rm -rf $(d_tk)/usr/lib/python3.12/tkinter/test
+
+	mkdir -p $(d_dist)/usr/lib/python3.12
+	find $(d_dist) -name __pycache__ | xargs -r rm -rf
+
+	mkdir -p $(d_2to3)/usr/lib/python3.12
+	cp -r 3.12/Lib/lib2to3 $(d_2to3)/usr/lib/python3.12/.
+	rm -rf $(d_2to3)/usr/lib/python3.12/lib2to3/tests
+	find $(d_2to3) -name __pycache__ | xargs -r rm -rf
+
+dbg-install-py3.12: dbg-stamp-py3.12
+	: # FIXME: 3.12 install errors out ...
+	if [ "3.12" = 3.12 ]; then \
+	  cd 3.12 && $(SET_ENV12) python3.12-dbg setup.py install \
+		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb; \
+	  mkdir -p $(d_tk)/usr/lib/python3.12/lib-dynload; \
+	  mv $(d_tk)/usr/lib/python3/dist-packages/*.so \
+	    $(d_tk)/usr/lib/python3.12/lib-dynload; \
+	  rm -rf $(d_tk)/usr/lib/python3/dist-packages; \
+	else \
+	  cd 3.12 && $(SET_ENV12) python3.12-dbg setup.py install \
+		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb; \
+	fi
+	mkdir -p $(d_tk)-dbg/usr/lib/python3.12/lib-dynload
+	mv $(d_tk)-dbg/usr/lib/python3/*-packages/*.so \
+		$(d_tk)-dbg/usr/lib/python3.12/lib-dynload/
+	mkdir -p $(d_gdbm)-dbg/usr/lib/python3.12/lib-dynload
+	mv $(d_tk)-dbg/usr/lib/python3.12/lib-dynload/_gdbm*.so \
+		$(d_gdbm)-dbg/usr/lib/python3.12/lib-dynload/
+ifeq ($(with_dbmmodule),yes)
+	if [ -f $(d_tk)-dbg/usr/lib/python3.12/lib-dynload/_dbm*.so ]; then \
+	  mv $(d_tk)-dbg/usr/lib/python3.12/lib-dynload/_dbm*.so \
+		$(d_gdbm)-dbg/usr/lib/python3.12/lib-dynload/; \
 	fi
 endif
 	rm -rf $(d_tk)-dbg/usr/lib/python3

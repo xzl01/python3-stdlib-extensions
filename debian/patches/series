@@ -68,5 +68,9 @@
 3.11/disable-some-tests.diff
 3.11/mangle-fstack-protector.diff
 3.11/lib2to3-no-pickled-grammar.diff
+# 3.12
+3.12/lib2to3-no-pickled-grammar.diff
+3.12/add-imp-module.diff
+#
 add-dbm-module.diff
 no-dbm.diff
