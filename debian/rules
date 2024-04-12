@@ -18,7 +18,7 @@ distrelease  := $(shell lsb_release -cs)
 PYVERS	= $(shell py3versions -vs)
 PYVERS	= 3.11 3.12
 
-MIN_VER = 3.11.2-0~
+MIN_VER = 3.11.6-1~
 NEXT_VER = 3.13
 
 # FIXME: remove sid when uploading to unstable, after bullseye is released

@@ -27,7 +27,8 @@ PyAPI_FUNC(void) _PyEval_SignalReceived(PyInterpreterState *interp);
 PyAPI_FUNC(int) _PyEval_AddPendingCall(
     PyInterpreterState *interp,
     int (*func)(void *),
-    void *arg);
+    void *arg,
+    int mainthreadonly);
 PyAPI_FUNC(void) _PyEval_SignalAsyncExc(PyInterpreterState *interp);
 #ifdef HAVE_FORK
 extern PyStatus _PyEval_ReInitThreads(PyThreadState *tstate);
@@ -73,6 +74,7 @@ extern int _PyPerfTrampoline_SetCallbacks(_PyPerf_Callbacks *);
 extern void _PyPerfTrampoline_GetCallbacks(_PyPerf_Callbacks *);
 extern int _PyPerfTrampoline_Init(int activate);
 extern int _PyPerfTrampoline_Fini(void);
+extern void _PyPerfTrampoline_FreeArenas(void);
 extern int _PyIsPerfTrampolineActive(void);
 extern PyStatus _PyPerfTrampoline_AfterFork_Child(void);
 #ifdef PY_HAVE_PERF_TRAMPOLINE
@@ -153,6 +155,7 @@ extern PyObject* _Py_MakeCoro(PyFunctionObject *func);
 
 extern int _Py_HandlePending(PyThreadState *tstate);
 
+extern PyObject * _PyEval_GetFrameLocals(void);
 
 
 #ifdef __cplusplus

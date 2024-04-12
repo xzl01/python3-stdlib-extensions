@@ -25,7 +25,7 @@ extern "C" {
 #include "pycore_gc.h"            // struct _gc_runtime_state
 #include "pycore_global_objects.h"  // struct _Py_interp_static_objects
 #include "pycore_import.h"        // struct _import_state
-#include "pycore_instruments.h"   // PY_MONITORING_EVENTS
+#include "pycore_instruments.h"   // _PY_MONITORING_EVENTS
 #include "pycore_list.h"          // struct _Py_list_state
 #include "pycore_object_state.h"   // struct _py_object_state
 #include "pycore_obmalloc.h"      // struct obmalloc_state
@@ -39,6 +39,32 @@ struct _Py_long_state {
     int max_str_digits;
 };
 
+
+/* cross-interpreter data registry */
+
+/* For now we use a global registry of shareable classes.  An
+   alternative would be to add a tp_* slot for a class's
+   crossinterpdatafunc. It would be simpler and more efficient. */
+
+struct _xidregitem;
+
+struct _xidregitem {
+    struct _xidregitem *prev;
+    struct _xidregitem *next;
+    /* This can be a dangling pointer, but only if weakref is set. */
+    PyTypeObject *cls;
+    /* This is NULL for builtin types. */
+    PyObject *weakref;
+    size_t refcount;
+    crossinterpdatafunc getdata;
+};
+
+struct _xidregistry {
+    PyThread_type_lock mutex;
+    struct _xidregitem *head;
+};
+
+
 /* interpreter state */
 
 /* PyInterpreterState holds the global state for one of the runtime's
@@ -48,12 +74,22 @@ struct _Py_long_state {
    */
 struct _is {
 
-    struct _ceval_state ceval;
     PyInterpreterState *next;
+
+    int64_t id;
+    int64_t id_refcount;
+    int requires_idref;
+    PyThread_type_lock id_mutex;
+
+    /* Has been initialized to a safe state.
+
+       In order to be effective, this must be set to 0 during or right
+       after allocation. */
+    int _initialized;
+    int finalizing;
 
     uint64_t monitoring_version;
     uint64_t last_restart_version;
-
     struct pythreads {
         uint64_t next_unique_id;
         /* The linked list of threads, newest first. */
@@ -72,18 +108,6 @@ struct _is {
        Get runtime from tstate: tstate->interp->runtime. */
     struct pyruntimestate *runtime;
 
-    int64_t id;
-    int64_t id_refcount;
-    int requires_idref;
-    PyThread_type_lock id_mutex;
-
-    /* Has been initialized to a safe state.
-
-       In order to be effective, this must be set to 0 during or right
-       after allocation. */
-    int _initialized;
-    int finalizing;
-
     /* Set by Py_EndInterpreter().
 
        Use _PyInterpreterState_GetFinalizing()
@@ -91,16 +115,37 @@ struct _is {
        to access it, don't access it directly. */
     _Py_atomic_address _finalizing;
 
-    struct _obmalloc_state obmalloc;
-
     struct _gc_runtime_state gc;
 
-    struct _import_state imports;
+    /* The following fields are here to avoid allocation during init.
+       The data is exposed through PyInterpreterState pointer fields.
+       These fields should not be accessed directly outside of init.
+
+       All other PyInterpreterState pointer fields are populated when
+       needed and default to NULL.
+
+       For now there are some exceptions to that rule, which require
+       allocation during init.  These will be addressed on a case-by-case
+       basis.  Also see _PyRuntimeState regarding the various mutex fields.
+       */
 
     // Dictionary of the sys module
     PyObject *sysdict;
+
     // Dictionary of the builtins module
     PyObject *builtins;
+
+    struct _ceval_state ceval;
+
+    struct _import_state imports;
+
+    /* The per-interpreter GIL, which might not be used. */
+    struct _gil_runtime_state _gil;
+
+     /* ---------- IMPORTANT ---------------------------
+     The fields above this line are declared as early as
+     possible to facilitate out-of-process observability
+     tools. */
 
     PyObject *codec_search_path;
     PyObject *codec_search_cache;
@@ -133,6 +178,8 @@ struct _is {
     struct _warnings_runtime_state warnings;
     struct atexit_state atexit;
 
+    struct _obmalloc_state obmalloc;
+
     PyObject *audit_hooks;
     PyType_WatchCallback type_watchers[TYPE_MAX_WATCHERS];
     PyCode_WatchCallback code_watchers[CODE_MAX_WATCHERS];
@@ -161,34 +208,27 @@ struct _is {
     struct callable_cache callable_cache;
     PyCodeObject *interpreter_trampoline;
 
-    _Py_Monitors monitors;
+    _Py_GlobalMonitors monitors;
     bool f_opcode_trace_set;
     bool sys_profile_initialized;
     bool sys_trace_initialized;
     Py_ssize_t sys_profiling_threads; /* Count of threads with c_profilefunc set */
     Py_ssize_t sys_tracing_threads; /* Count of threads with c_tracefunc set */
-    PyObject *monitoring_callables[PY_MONITORING_TOOL_IDS][PY_MONITORING_EVENTS];
+    PyObject *monitoring_callables[PY_MONITORING_TOOL_IDS][_PY_MONITORING_EVENTS];
     PyObject *monitoring_tool_names[PY_MONITORING_TOOL_IDS];
 
     struct _Py_interp_cached_objects cached_objects;
     struct _Py_interp_static_objects static_objects;
 
-    /* The following fields are here to avoid allocation during init.
-       The data is exposed through PyInterpreterState pointer fields.
-       These fields should not be accessed directly outside of init.
+    // XXX Remove this field once we have a tp_* slot.
+    struct _xidregistry xidregistry;
+    /* The thread currently executing in the __main__ module, if any. */
+    PyThreadState *threads_main;
+    /* The ID of the OS thread in which we are finalizing.
+       We use _Py_atomic_address instead of adding a new _Py_atomic_ulong. */
+    _Py_atomic_address _finalizing_id;
 
-       All other PyInterpreterState pointer fields are populated when
-       needed and default to NULL.
-
-       For now there are some exceptions to that rule, which require
-       allocation during init.  These will be addressed on a case-by-case
-       basis.  Also see _PyRuntimeState regarding the various mutex fields.
-       */
-
-    /* The per-interpreter GIL, which might not be used. */
-    struct _gil_runtime_state _gil;
-
-    /* the initial PyInterpreterState.threads.head */
+   /* the initial PyInterpreterState.threads.head */
     PyThreadState _initial_thread;
 };
 
@@ -203,26 +243,25 @@ _PyInterpreterState_GetFinalizing(PyInterpreterState *interp) {
     return (PyThreadState*)_Py_atomic_load_relaxed(&interp->_finalizing);
 }
 
+static inline unsigned long
+_PyInterpreterState_GetFinalizingID(PyInterpreterState *interp) {
+    return (unsigned long)_Py_atomic_load_relaxed(&interp->_finalizing_id);
+}
+
 static inline void
 _PyInterpreterState_SetFinalizing(PyInterpreterState *interp, PyThreadState *tstate) {
     _Py_atomic_store_relaxed(&interp->_finalizing, (uintptr_t)tstate);
+    if (tstate == NULL) {
+        _Py_atomic_store_relaxed(&interp->_finalizing_id, 0);
+    }
+    else {
+        // XXX Re-enable this assert once gh-109860 is fixed.
+        //assert(tstate->thread_id == PyThread_get_thread_ident());
+        _Py_atomic_store_relaxed(&interp->_finalizing_id,
+                                 (uintptr_t)tstate->thread_id);
+    }
 }
 
-
-/* cross-interpreter data registry */
-
-/* For now we use a global registry of shareable classes.  An
-   alternative would be to add a tp_* slot for a class's
-   crossinterpdatafunc. It would be simpler and more efficient. */
-
-struct _xidregitem;
-
-struct _xidregitem {
-    struct _xidregitem *prev;
-    struct _xidregitem *next;
-    PyObject *cls;  // weakref to a PyTypeObject
-    crossinterpdatafunc getdata;
-};
 
 PyAPI_FUNC(PyInterpreterState*) _PyInterpreterState_LookUpID(int64_t);
 

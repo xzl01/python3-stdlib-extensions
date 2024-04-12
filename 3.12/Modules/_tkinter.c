@@ -876,8 +876,9 @@ asBignumObj(PyObject *value)
         return NULL;
     }
     hexchars += neg + 2; /* skip sign and "0x" */
-    mp_init(&bigValue);
-    if (mp_read_radix(&bigValue, hexchars, 16) != MP_OKAY) {
+    if (mp_init(&bigValue) != MP_OKAY ||
+        mp_read_radix(&bigValue, hexchars, 16) != MP_OKAY)
+    {
         mp_clear(&bigValue);
         Py_DECREF(hexstr);
         PyErr_NoMemory();
@@ -1217,7 +1218,7 @@ typedef struct Tkapp_CallEvent {
     Tcl_Condition *done;
 } Tkapp_CallEvent;
 
-void
+static void
 Tkapp_CallDeallocArgs(Tcl_Obj** objv, Tcl_Obj** objStore, int objc)
 {
     int i;

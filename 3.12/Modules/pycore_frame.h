@@ -39,6 +39,8 @@ typedef enum _framestate {
     FRAME_CLEARED = 4
 } PyFrameState;
 
+#define FRAME_STATE_FINISHED(S) ((S) >= FRAME_COMPLETED)
+
 enum _frameowner {
     FRAME_OWNED_BY_THREAD = 0,
     FRAME_OWNED_BY_GENERATOR = 1,
@@ -225,6 +227,9 @@ _PyFrame_ClearExceptCode(_PyInterpreterFrame * frame);
 
 int
 _PyFrame_Traverse(_PyInterpreterFrame *frame, visitproc visit, void *arg);
+
+PyObject *
+_PyFrame_GetLocals(_PyInterpreterFrame *frame, int include_hidden);
 
 int
 _PyFrame_FastToLocalsWithError(_PyInterpreterFrame *frame);
