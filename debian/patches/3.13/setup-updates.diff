@@ -1,0 +1,28 @@
+--- a/3.13/setup.py
++++ b/3.13/setup.py
+@@ -509,6 +509,9 @@ class PyBuildExt(build_ext):
+         exts = []
+         missing = []
+ 
++        # stdlib-extensions
++        inc_dirs.append('Modules')
++        
+         config_h = sysconfig.get_config_h_filename()
+         with open(config_h) as file:
+             config_h_vars = sysconfig.parse_config_h(file)
+@@ -552,6 +555,7 @@ class PyBuildExt(build_ext):
+         if (True or 'gdbm' in dbm_order and
+             self.compiler.find_library_file(lib_dirs, 'gdbm')):
+             exts.append( Extension('_gdbm', ['Modules/_gdbmmodule.c'],
++                                   include_dirs = inc_dirs,
+                                    libraries = ['gdbm'] ) )
+         else:
+             missing.append('_gdbm')
+@@ -706,6 +710,7 @@ class PyBuildExt(build_ext):
+         # OK... everything seems to be present for Tcl/Tk.
+ 
+         include_dirs = [] ; libs = [] ; defs = [] ; added_lib_dirs = []
++        include_dirs.append('Modules')
+         for dir in tcl_includes + tk_includes:
+             if dir not in include_dirs:
+                 include_dirs.append(dir)

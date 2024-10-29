@@ -25,6 +25,7 @@ case "$1" in
 	remove_bytecode python3-tk
         ;;
     upgrade)
+	remove_bytecode python3-tk
         ;;
     deconfigure)
         ;;

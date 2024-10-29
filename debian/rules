@@ -16,10 +16,10 @@ distrelease  := $(shell lsb_release -cs)
 #rel_ext	= $(strip $(shell dpkg-parsechangelog | awk -F- '/^Version:/ {print $$NF}'))
 
 PYVERS	= $(shell py3versions -vs)
-PYVERS	= 3.11 3.12
+PYVERS	= 3.12 3.13
 
-MIN_VER = 3.11.6-1~
-NEXT_VER = 3.13
+MIN_VER = 3.12.5-1~
+NEXT_VER = 3.14
 
 # FIXME: remove sid when uploading to unstable, after bullseye is released
 #ifeq (,$(filter $(distrelase), jessie stretch buster bullseye bookworm sid precise trusty xenial bionic focal groovy hirsute))
@@ -33,24 +33,25 @@ NEXT_VER = 3.13
 include /usr/share/dpkg/architecture.mk
 
 SET_ENV = PYTHONPATH=$(CURDIR)/$*/Lib
-SET_ENV12 = PYTHONPATH=$(CURDIR)/3.11/Lib
+SET_ENV12 = PYTHONPATH=$(CURDIR)/3.12/Lib
+SET_ENV13 = PYTHONPATH=$(CURDIR)/3.13/Lib
 
 ifneq ($(DEB_BUILD_MULTIARCH),$(DEB_HOST_MULTIARCH))
   SET_ENV += PYTHONPATH=/usr/lib/python$*/plat-$(DEB_HOST_MULTIARCH)
   SET_ENV12 += PYTHONPATH=/usr/lib/python3.12/plat-$(DEB_HOST_MULTIARCH)
+  SET_ENV13 += PYTHONPATH=/usr/lib/python3.13/plat-$(DEB_HOST_MULTIARCH)
 
   # FIXME: is this sufficient?
   SET_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_GNU_CPU)
   SET_ENV12 += _PYTHON_HOST_PLATFORM=$(DEB_HOST_GNU_CPU)
+  SET_ENV13 += _PYTHON_HOST_PLATFORM=$(DEB_HOST_GNU_CPU)
 endif
 
 p_tk	= python3-tk
 p_gdbm	= python3-gdbm
-p_dist	= python3-distutils
 p_2to3	= python3-lib2to3
 d_tk	= debian/$(p_tk)
 d_gdbm	= debian/$(p_gdbm)
-d_dist	= debian/$(p_dist)
 d_2to3	= debian/$(p_2to3)
 
 build-arch: build
@@ -58,7 +59,10 @@ build-indep: build
 build: build-stamp
 build-arch: build-stamp
 build-indep: build-stamp
-build-stamp: $(PYVERS:%=build-stamp-py%) $(PYVERS:%=dbg-stamp-py%)
+#build-stamp: $(PYVERS:%=build-stamp-py%) $(PYVERS:%=dbg-stamp-py%)
+#	touch $@
+build-stamp:
+	: # all extensions built from the pythonX.Y packages
 	touch $@
 
 build-stamp-py%:
@@ -89,6 +93,20 @@ dbg-stamp-py3.12:
 	cd 3.12 && $(SET_ENV12) python3.12-dbg setup.py build
 	touch $@
 
+build-stamp-py3.13:
+	dh_testdir
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.13/libBLT86.so
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.13/libBLT86.so.8.6
+	cd 3.13 && $(SET_ENV13) python3.13 setup.py build
+	touch $@
+
+dbg-stamp-py3.13:
+	dh_testdir
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.13/libBLT85.so
+	ln -sf /usr/lib/libBLT.2.4.so.8.6 3.13/libBLT85.so.8.6
+	cd 3.13 && $(SET_ENV13) python3.13-dbg setup.py build
+	touch $@
+
 clean:
 	dh_testdir
 	dh_testroot
@@ -96,14 +114,12 @@ clean:
 	rm -rf 3.*/build
 	rm -rf 3.*/libBLT*
 	rm -f debian/python3-tk.postinst
-	rm -f debian/python3-distutils.postinst
 	rm -f debian/python3-lib2to3.postinst
 	find 3* -name __pycache__ | xargs -r rm -rf
 	dh_clean
 
 install: build install-prereq $(PYVERS:%=install-stamp-py%) $(PYVERS:%=dbg-install-py%)
-	rdfind -makehardlinks true $(d_tk)/usr/lib
-	rdfind -makehardlinks true $(d_dist)/usr/lib
+#	rdfind -makehardlinks true $(d_tk)/usr/lib
 	rdfind -makehardlinks true $(d_2to3)/usr/lib
 	rm -f results.txt
 
@@ -112,7 +128,9 @@ install-prereq:
 	dh_testroot
 	dh_prep
 
-install-stamp-py%: build-stamp-py%
+install-stamp-py%: #build-stamp-py%
+	: # nothing to do
+ifeq (0,1)
 	: # FIXME: 3.11 install errors out ...
 	if [ "$*" = 3.11 ]; then \
 	  cd $* && $(SET_ENV) python$* setup.py install \
@@ -140,20 +158,16 @@ endif
 	rm -rf $(d_tk)/usr/lib/python3
 	cp -r $*/Lib/tkinter $(d_tk)/usr/lib/python$*/.
 	rm -rf $(d_tk)/usr/lib/python$*/tkinter/test
-
-	mkdir -p $(d_dist)/usr/lib/python$*
-	cp -r $*/Lib/distutils $(d_dist)/usr/lib/python$*/.
-	rm -f -v $(d_dist)/usr/lib/python$*/distutils/{__init__,version}.py
-	rm -rf $(d_dist)/usr/lib/python$*/distutils/tests
-	rm -rf $(d_dist)/usr/lib/python$*/distutils/command/wininst-*.exe
-	find $(d_dist) -name __pycache__ | xargs -r rm -rf
+endif
 
 	mkdir -p $(d_2to3)/usr/lib/python$*
 	cp -r $*/Lib/lib2to3 $(d_2to3)/usr/lib/python$*/.
 	rm -rf $(d_2to3)/usr/lib/python$*/lib2to3/tests
 	find $(d_2to3) -name __pycache__ | xargs -r rm -rf
 
-dbg-install-py%: dbg-stamp-py%
+dbg-install-py%: #dbg-stamp-py%
+	: # nothing to do
+ifeq (0,1)
 	: # FIXME: 3.11 install errors out ...
 	if [ "$*" = 3.11 ]; then \
 	  cd $* && $(SET_ENV) python$*-dbg setup.py install \
@@ -172,15 +186,17 @@ dbg-install-py%: dbg-stamp-py%
 	mkdir -p $(d_gdbm)-dbg/usr/lib/python$*/lib-dynload
 	mv $(d_tk)-dbg/usr/lib/python$*/lib-dynload/_gdbm*.so \
 		$(d_gdbm)-dbg/usr/lib/python$*/lib-dynload/
-ifeq ($(with_dbmmodule),yes)
+  ifeq ($(with_dbmmodule),yes)
 	if [ -f $(d_tk)-dbg/usr/lib/python$*/lib-dynload/_dbm*.so ]; then \
 	  mv $(d_tk)-dbg/usr/lib/python$*/lib-dynload/_dbm*.so \
 		$(d_gdbm)-dbg/usr/lib/python$*/lib-dynload/; \
 	fi
-endif
+  endif
 	rm -rf $(d_tk)-dbg/usr/lib/python3
+endif
 
-install-stamp-py3.12: build-stamp-py3.12
+install-stamp-py3.12: #build-stamp-py3.12
+ifeq (0,1)
 	: # FIXME: 3.12 install errors out ...
 	if [ "3.12" = 3.12 ]; then \
 	  cd 3.12 && $(SET_ENV12) python3.12 setup.py install \
@@ -199,25 +215,23 @@ install-stamp-py3.12: build-stamp-py3.12
 	mkdir -p $(d_gdbm)/usr/lib/python3.12/lib-dynload
 	mv $(d_tk)/usr/lib/python3.12/lib-dynload/_gdbm*.so \
 		$(d_gdbm)/usr/lib/python3.12/lib-dynload/
-ifeq ($(with_dbmmodule),yes)
+  ifeq ($(with_dbmmodule),yes)
 	if [ -f $(d_tk)/usr/lib/python3.12/lib-dynload/_dbm*.so ]; then \
 	  mv $(d_tk)/usr/lib/python3.12/lib-dynload/_dbm*.so \
 		$(d_gdbm)/usr/lib/python3.12/lib-dynload/; \
 	fi
-endif
+  endif
 	rm -rf $(d_tk)/usr/lib/python3
 	cp -r 3.12/Lib/tkinter $(d_tk)/usr/lib/python3.12/.
 	rm -rf $(d_tk)/usr/lib/python3.12/tkinter/test
-
-	mkdir -p $(d_dist)/usr/lib/python3.12
-	find $(d_dist) -name __pycache__ | xargs -r rm -rf
-
+endif
 	mkdir -p $(d_2to3)/usr/lib/python3.12
 	cp -r 3.12/Lib/lib2to3 $(d_2to3)/usr/lib/python3.12/.
 	rm -rf $(d_2to3)/usr/lib/python3.12/lib2to3/tests
 	find $(d_2to3) -name __pycache__ | xargs -r rm -rf
 
-dbg-install-py3.12: dbg-stamp-py3.12
+dbg-install-py3.12: #dbg-stamp-py3.12
+ifeq (0,1)
 	: # FIXME: 3.12 install errors out ...
 	if [ "3.12" = 3.12 ]; then \
 	  cd 3.12 && $(SET_ENV12) python3.12-dbg setup.py install \
@@ -236,13 +250,78 @@ dbg-install-py3.12: dbg-stamp-py3.12
 	mkdir -p $(d_gdbm)-dbg/usr/lib/python3.12/lib-dynload
 	mv $(d_tk)-dbg/usr/lib/python3.12/lib-dynload/_gdbm*.so \
 		$(d_gdbm)-dbg/usr/lib/python3.12/lib-dynload/
-ifeq ($(with_dbmmodule),yes)
+  ifeq ($(with_dbmmodule),yes)
 	if [ -f $(d_tk)-dbg/usr/lib/python3.12/lib-dynload/_dbm*.so ]; then \
 	  mv $(d_tk)-dbg/usr/lib/python3.12/lib-dynload/_dbm*.so \
 		$(d_gdbm)-dbg/usr/lib/python3.12/lib-dynload/; \
 	fi
-endif
+  endif
 	rm -rf $(d_tk)-dbg/usr/lib/python3
+endif
+
+install-stamp-py3.13: #build-stamp-py3.13
+	: # nothing to do
+ifeq (0,1)
+	: # FIXME: 3.13 install errors out ...
+	if [ "3.13" = 3.13 ]; then \
+	  cd 3.13 && $(SET_ENV13) python3.13 setup.py install \
+		--root=$(CURDIR)/$(d_tk) --install-layout=deb; \
+	  mkdir -p $(d_tk)/usr/lib/python3.13/lib-dynload; \
+	  mv $(d_tk)/usr/lib/python3/dist-packages/*.so \
+	    $(d_tk)/usr/lib/python3.13/lib-dynload; \
+	  rm -rf $(d_tk)/usr/lib/python3/dist-packages; \
+	else \
+	  cd 3.13 && $(SET_ENV13) python3.13 setup.py install \
+		--root=$(CURDIR)/$(d_tk) --install-layout=deb; \
+	fi
+	mkdir -p $(d_tk)/usr/lib/python3.13/lib-dynload
+	mv $(d_tk)/usr/lib/python3/*-packages/*.so \
+		$(d_tk)/usr/lib/python3.13/lib-dynload/
+	mkdir -p $(d_gdbm)/usr/lib/python3.13/lib-dynload
+	mv $(d_tk)/usr/lib/python3.13/lib-dynload/_gdbm*.so \
+		$(d_gdbm)/usr/lib/python3.13/lib-dynload/
+  ifeq ($(with_dbmmodule),yes)
+	if [ -f $(d_tk)/usr/lib/python3.13/lib-dynload/_dbm*.so ]; then \
+	  mv $(d_tk)/usr/lib/python3.13/lib-dynload/_dbm*.so \
+		$(d_gdbm)/usr/lib/python3.13/lib-dynload/; \
+	fi
+  endif
+	rm -rf $(d_tk)/usr/lib/python3
+	cp -r 3.13/Lib/tkinter $(d_tk)/usr/lib/python3.13/.
+	rm -rf $(d_tk)/usr/lib/python3.13/tkinter/test
+
+	mkdir -p $(d_dist)/usr/lib/python3.13
+	find $(d_dist) -name __pycache__ | xargs -r rm -rf
+endif
+
+dbg-install-py3.13: #dbg-stamp-py3.13
+ifeq (0,1)
+	: # FIXME: 3.13 install errors out ...
+	if [ "3.13" = 3.13 ]; then \
+	  cd 3.13 && $(SET_ENV13) python3.13-dbg setup.py install \
+		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb; \
+	  mkdir -p $(d_tk)/usr/lib/python3.13/lib-dynload; \
+	  mv $(d_tk)/usr/lib/python3/dist-packages/*.so \
+	    $(d_tk)/usr/lib/python3.13/lib-dynload; \
+	  rm -rf $(d_tk)/usr/lib/python3/dist-packages; \
+	else \
+	  cd 3.13 && $(SET_ENV13) python3.13-dbg setup.py install \
+		--root=$(CURDIR)/$(d_tk)-dbg --install-layout=deb; \
+	fi
+	mkdir -p $(d_tk)-dbg/usr/lib/python3.13/lib-dynload
+	mv $(d_tk)-dbg/usr/lib/python3/*-packages/*.so \
+		$(d_tk)-dbg/usr/lib/python3.13/lib-dynload/
+	mkdir -p $(d_gdbm)-dbg/usr/lib/python3.13/lib-dynload
+	mv $(d_tk)-dbg/usr/lib/python3.13/lib-dynload/_gdbm*.so \
+		$(d_gdbm)-dbg/usr/lib/python3.13/lib-dynload/
+  ifeq ($(with_dbmmodule),yes)
+	if [ -f $(d_tk)-dbg/usr/lib/python3.13/lib-dynload/_dbm*.so ]; then \
+	  mv $(d_tk)-dbg/usr/lib/python3.13/lib-dynload/_dbm*.so \
+		$(d_gdbm)-dbg/usr/lib/python3.13/lib-dynload/; \
+	fi
+  endif
+	rm -rf $(d_tk)-dbg/usr/lib/python3
+endif
 
 SPACE := $(EMPTY) $(EMPTY)
 COMMA := ,
@@ -254,12 +333,7 @@ binary-indep: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs -i
-	dh_installdocs -p$(p_dist) -p$(p_2to3) debian/README.Debian
-	( \
-	  echo 'python3:Depends=python3:any (>= $(MIN_VER)), python3:any (<< $(NEXT_VER))'; \
-	  echo 'python3:Versions=$(call _pyver,,$(PYVERS),)'; \
-	  echo 'python3:Provides=$(call _pyver,python,$(PYVERS),-distutils)'; \
-	) >> debian/python3-distutils.substvars
+	dh_installdocs -p$(p_2to3) debian/README.Debian
 	( \
 	  echo 'python3:Depends=python3:any (>= $(MIN_VER)), python3:any (<< $(NEXT_VER))'; \
 	  echo 'python3:Versions=$(call _pyver,,$(PYVERS),)'; \
@@ -269,8 +343,6 @@ binary-indep: build install
 	dh_lintian -i
 	dh_compress -i
 	dh_fixperms -i
-	sed 's/@PYVERS@/$(PYVERS)/' debian/python3-distutils.postinst.in \
-	  > debian/python3-distutils.postinst
 	sed 's/@PYVERS@/$(PYVERS)/' debian/python3-lib2to3.postinst.in \
 	  > debian/python3-lib2to3.postinst
 	dh_installdeb -i
@@ -284,24 +356,25 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs -a
-	dh_installdocs -p$(p_gdbm) debian/README.Debian
-	dh_installdocs -p$(p_tk) debian/README.Tk
+	dh_installdocs -p$(p_gdbm) -p$(p_tk) debian/README.Debian
 	rm -rf $(d_gdbm)-dbg/usr/share/doc/$(p_gdbm)-dbg
 	ln -s $(p_gdbm) $(d_gdbm)-dbg/usr/share/doc/$(p_gdbm)-dbg
 	rm -rf $(d_tk)-dbg/usr/share/doc/$(p_tk)-dbg
 	ln -s $(p_tk) $(d_tk)-dbg/usr/share/doc/$(p_tk)-dbg
-	dh_strip -p$(p_gdbm) --dbg-package=$(p_gdbm)-dbg
-	dh_strip -p$(p_tk) --dbg-package=$(p_tk)-dbg
+#	dh_strip -p$(p_gdbm) --dbg-package=$(p_gdbm)-dbg
+#	dh_strip -p$(p_tk) --dbg-package=$(p_tk)-dbg
 
 	( \
 	  echo 'python3:Depends=python3 (>= $(MIN_VER)), python3 (<< $(NEXT_VER))'; \
 	  echo 'python3:Versions=$(call _pyver,,$(PYVERS),)'; \
 	  echo 'python3:Provides=$(call _pyver,python,$(PYVERS),-gdbm)'; \
+	  echo 'gdbm:Depends=$(call _pyver,python,$(PYVERS),-gdbm)'; \
 	) >> debian/python3-gdbm.substvars
 	( \
 	  echo 'python3:Depends=python3 (>= $(MIN_VER)), python3 (<< $(NEXT_VER))'; \
 	  echo 'python3:Versions=$(call _pyver,,$(PYVERS),)'; \
 	  echo 'python3:Provides=$(call _pyver,python,$(PYVERS),-tk)'; \
+	  echo 'tk:Depends=$(call _pyver,python,$(PYVERS),-tk)'; \
 	) >> debian/python3-tk.substvars
 
 	dh_lintian -a

@@ -1,3 +1,82 @@
+python3-stdlib-extensions (3.12.6-1) unstable; urgency=medium
+
+  * Update 3.12 extensions and modules to the 3.12.5 release.
+  * Update 3.13 extensions and modules to the 3.13.0~rc1 release.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 09 Sep 2024 16:32:23 +0200
+
+python3-stdlib-extensions (3.12.5-3) unstable; urgency=medium
+
+  * Silence warning of non-existing python files in the package.
+  * Also remove python3.11 byte-code on upgrade.
+
+ -- Matthias Klose <doko@debian.org>  Thu, 22 Aug 2024 15:19:18 +0200
+
+python3-stdlib-extensions (3.12.5-2) unstable; urgency=medium
+
+  * Stop building the gdbm and tk extensions, and make the python3-gdbm
+    and python3-tk packages dependency packages.
+
+ -- Matthias Klose <doko@debian.org>  Thu, 22 Aug 2024 10:02:34 +0200
+
+python3-stdlib-extensions (3.12.5-1) unstable; urgency=medium
+
+  * Update 3.12 extensions and modules to the 3.12.5 release.
+  * Update 3.13 extensions and modules to the 3.13.0~rc1 release.
+
+ -- Matthias Klose <doko@debian.org>  Thu, 08 Aug 2024 07:18:49 +0200
+
+python3-stdlib-extensions (3.12.4-2) unstable; urgency=medium
+
+  * Update 3.13 extensions and modules to the 3.13.0~b4 release.
+  * Also remove bytecode on upgrade. Closes: #1076044.
+  * Bump standards version.
+
+ -- Matthias Klose <doko@debian.org>  Fri, 19 Jul 2024 12:03:51 +0200
+
+python3-stdlib-extensions (3.12.4-1) unstable; urgency=medium
+
+  * Update 3.12 extensions and modules to the 3.12.4 release.
+  * Update 3.13 extensions and modules to the 3.13.0~b3 release.
+  * Stop building the python3-distutils package.
+  * Stop building for 3.11.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 09 Jul 2024 13:37:19 +0200
+
+python3-stdlib-extensions (3.12.3-3.1) unstable; urgency=medium
+
+  * Revert: Build 3.12 and 3.13 extensions using the distutils from 3.11.
+  * Build-Depend on python3-setuptools, to use setuptools' distutils for the
+    build.
+  * Add myself to uploaders.
+
+ -- Stefano Rivera <stefanor@debian.org>  Sat, 25 May 2024 12:10:07 -0400
+
+python3-stdlib-extensions (3.12.3-3) unstable; urgency=medium
+
+  * Build 3.12 and 3.13 extensions using the distutils from 3.11.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 18 May 2024 23:33:44 +0200
+
+python3-stdlib-extensions (3.12.3-2) unstable; urgency=medium
+
+  * Add python 3.13 extensions.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 18 May 2024 14:56:09 +0200
+
+python3-stdlib-extensions (3.12.3-1) unstable; urgency=medium
+
+  * Update 3.11 extensions and modules to 3.11.9 release.
+  * Update 3.12 extensions and modules to 3.12.3 release.
+
+ -- Matthias Klose <doko@debian.org>  Fri, 12 Apr 2024 15:08:54 +0200
+
+python3-stdlib-extensions (3.12.2-3) unstable; urgency=medium
+
+  * Build-depend on libpython3.11t64-dbg, libpython3.12t64-dbg.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 04 Mar 2024 04:00:22 +0100
+
 python3-stdlib-extensions (3.12.2-2) unstable; urgency=medium
 
   * Relax python dependencies. Closes: #1065366.
